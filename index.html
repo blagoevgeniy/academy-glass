@@ -130,7 +130,10 @@
     .hero-content {
       position: relative;
       z-index: 2;
-      max-width: 700px;
+      width: min(1180px, calc(100% - 40px));
+      max-width: none;
+      margin-left: auto;
+      margin-right: auto;
       padding-top: 70px;
     }
 
@@ -374,6 +377,7 @@
       }
 
       .hero-content {
+        width: calc(100% - 28px);
         padding-top: 90px;
       }
 
@@ -404,184 +408,6 @@
 
       .footer-inner {
         flex-direction: column;
-      }
-    }
-
-
-    /* FINAL VISUAL POLISH */
-    .hero {
-      min-height: 720px;
-      padding: 110px 0 70px;
-    }
-
-    .hero-content {
-      width: min(100%, 820px);
-      margin: 0 auto;
-    }
-
-    .hero h1 {
-      max-width: 780px;
-      margin-bottom: 24px;
-    }
-
-    .hero-text {
-      max-width: 640px;
-      margin-bottom: 28px;
-    }
-
-    .hero-stats {
-      max-width: 820px;
-      margin-top: 46px;
-    }
-
-    .section-light {
-      padding: 90px 0;
-    }
-
-    .section-subtitle {
-      max-width: 700px;
-    }
-
-    .services {
-      margin-top: 55px;
-      gap: 34px;
-    }
-
-    .service {
-      padding-top: 18px;
-    }
-
-    .trust {
-      padding: 58px 0;
-    }
-
-    .cta {
-      padding: 105px 0 110px;
-    }
-
-    .cta p {
-      max-width: 650px;
-      margin-bottom: 30px;
-    }
-
-    footer {
-      background: #080909;
-    }
-
-    @media (max-width: 900px) {
-      .hero {
-        min-height: 680px;
-      }
-
-      .hero-content {
-        width: 100%;
-      }
-
-      .hero-stats {
-        margin-top: 38px;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .container {
-        width: min(100% - 28px, 520px);
-      }
-
-      header {
-        padding: 16px 0;
-      }
-
-      .header-inner {
-        gap: 12px;
-      }
-
-      nav, .phone {
-        display: none;
-      }
-
-      .logo-mark {
-        font-size: 34px;
-      }
-
-      .logo-text {
-        font-size: 11px;
-      }
-
-      .header-button {
-        padding: 10px 14px;
-        font-size: 12px;
-      }
-
-      .hero {
-        min-height: auto;
-        padding: 125px 0 55px;
-      }
-
-      .hero h1 {
-        font-size: clamp(40px, 12vw, 58px);
-        line-height: 1.02;
-        margin-bottom: 20px;
-      }
-
-      .hero-text {
-        font-size: 16px;
-        line-height: 1.5;
-      }
-
-      .buttons {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .button {
-        width: 100%;
-        text-align: center;
-      }
-
-      .hero-stats {
-        grid-template-columns: 1fr 1fr;
-        gap: 0;
-        margin-top: 38px;
-      }
-
-      .stat {
-        padding: 14px 12px;
-      }
-
-      .section-light {
-        padding: 65px 0;
-      }
-
-      .section-title {
-        font-size: clamp(34px, 10vw, 48px);
-      }
-
-      .services {
-        grid-template-columns: 1fr;
-        gap: 30px;
-        margin-top: 40px;
-      }
-
-      .trust {
-        padding: 48px 0;
-      }
-
-      .trust-grid {
-        grid-template-columns: 1fr;
-        gap: 26px;
-      }
-
-      .cta {
-        padding: 75px 0 80px;
-      }
-
-      .cta h2 {
-        font-size: clamp(36px, 10vw, 52px);
-      }
-
-      .footer-inner {
-        gap: 12px;
-        align-items: flex-start;
       }
     }
 

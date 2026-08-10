@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Админ-панель — Академия автостекла</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f3f1;color:#111;font-family:Arial,Helvetica,sans-serif}
+.wrap{max-width:1050px;margin:auto;padding:20px}.card{background:#fff;border-radius:14px;padding:22px;margin:16px 0;box-shadow:0 2px 12px #0000000d}
+h1{margin:0 0 8px}.green{color:#8db800}.muted{color:#666}.hidden{display:none!important}
+input,textarea,select{width:100%;padding:13px;margin:7px 0 13px;border:1px solid #bbb;border-radius:8px;font:inherit;background:#fff}
+button{padding:12px 17px;border:0;border-radius:8px;background:#111;color:#fff;font-weight:700;cursor:pointer}
+button:disabled{opacity:.55;cursor:wait}.greenBtn{background:#c8ff28;color:#111}.danger{background:#c62828}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tab{background:#e7e7e3;color:#222}.tab.active{background:#111;color:#fff}
+.metricGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.metric{background:#f5f5f2;border-radius:12px;padding:18px}
+.metric b{display:block;font-size:28px}.metric span{color:#666}.request{border:1px solid #ddd;border-radius:12px;padding:16px;margin:12px 0}
+.requestHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}.requestTitle{font-size:18px;font-weight:800}
+.badge{display:inline-block;padding:6px 10px;border-radius:20px;background:#e9f7c7;font-size:12px;font-weight:700}.badge.done{background:#e4e4e4;color:#555}.badge.work{background:#fff0bf}
+.meta{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}.meta div{background:#f7f7f5;border-radius:8px;padding:10px}
+.meta b{display:block;font-size:12px;color:#777;margin-bottom:3px}.message{margin-top:10px;padding:12px;background:#f7f7f5;border-radius:8px;white-space:pre-wrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.statusBtn{background:#e8e8e5;color:#111}.statusBtn.active{background:#111;color:#fff}
+.adminFields{margin-top:14px;padding:14px;border:1px solid #ddd;border-radius:10px;background:#fafaf8}
+.adminFields h3{margin:0 0 8px;font-size:16px}.adminGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.adminGrid label{font-size:12px;color:#666;font-weight:700}
+.adminGrid input{margin-top:5px;margin-bottom:0}.saveRow{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.empty{padding:25px;text-align:center;color:#777}.notice{padding:12px;border-radius:9px;background:#f5f5f2;color:#555}
+.work{display:grid;grid-template-columns:120px 1fr auto;gap:15px;align-items:center;border-top:1px solid #ddd;padding:15px 0}
+.work img{width:120px;height:90px;object-fit:cover;border-radius:8px}
+@media(max-width:650px){.wrap{padding:14px}.metricGrid{grid-template-columns:1fr}.meta,.adminGrid{grid-template-columns:1fr}.work{grid-template-columns:80px 1fr}.work img{width:80px;height:65px}.work button{grid-column:2}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="login" class="card">
+<h1>Админ-панель <span class="green">Академия автостекла</span></h1>
+<p class="muted">Вход доступен вашему созданному администратору Supabase.</p>
+<input id="email" type="email" placeholder="Email" autocomplete="username">
+<input id="password" type="password" placeholder="Пароль" autocomplete="current-password">
+<button class="greenBtn" id="loginBtn">Войти</button>
+<p id="loginMsg" class="muted"></p>
+</div>
+
+<div id="panel" class="hidden">
+<div class="topbar">
+<div><h1>Академия автостекла</h1><div class="muted">Панель управления</div></div>
+<button id="logoutBtn">Выйти</button>
+</div>
+
+<div class="tabs">
+<button class="tab active" id="tabRequests">Заявки</button>
+<button class="tab" id="tabWorks">Фотографии работ</button>
+</div>
+
+<section id="requestsSection">
+<div class="metricGrid">
+<div class="metric"><b id="newCount">0</b><span>Новых заявок</span></div>
+<div class="metric"><b id="workCount">0</b><span>В работе</span></div>
+<div class="metric"><b id="doneCount">0</b><span>Завершённых</span></div>
+</div>
+
+<div class="card">
+<div class="topbar"><h2>Заявки клиентов</h2><button id="refreshRequests">Обновить</button></div>
+<div id="requestsList"><div class="empty">Загрузка…</div></div>
+</div>
+</section>
+
+<section id="worksSection" class="hidden">
+<div class="card">
+<h2>Добавить фотографию работы</h2>
+<input id="title" placeholder="Название работы">
+<textarea id="description" placeholder="Короткое описание"></textarea>
+<input id="image" type="file" accept="image/*">
+<button class="greenBtn" id="uploadBtn">Загрузить работу</button>
+<p id="uploadMsg" class="muted"></p>
+</div>
+<div class="card">
+<div class="topbar"><h2>Работы на сайте</h2><button id="refreshWorks">Обновить</button></div>
+<div id="worksList"><div class="empty">Загрузка…</div></div>
+</div>
+</section>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL="https://bkstefugkttyynphegsv.supabase.co";
+const SUPABASE_KEY="sb_publishable_TvFLPqHcoKBnvKzMe-8mhA_y0UXGvuh";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const BUCKET="works";
+
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
+function statusLabel(s){if(s==="done")return ["Завершена","done"];if(s==="work")return ["В работе","work"];return ["Новая",""]}
+function formatDate(v){if(!v)return "—";const d=new Date(v);return Number.isNaN(d.getTime())?esc(v):d.toLocaleString("ru-RU",{dateStyle:"short",timeStyle:"short"})}
+function dateOnly(v){return v?String(v).slice(0,10):""}
+
+async function loadRequests(){
+ const box=document.getElementById("requestsList");
+ box.innerHTML='<div class="empty">Загрузка…</div>';
+ const r=await sb.from("requests").select("*").order("created_at",{ascending:false});
+ if(r.error){box.innerHTML='<div class="notice">Не удалось загрузить заявки: '+esc(r.error.message)+'</div>';return}
+ const rows=r.data||[];let n=0,w=0,d=0;
+ rows.forEach(x=>{if(x.status==="done")d++;else if(x.status==="work")w++;else n++});
+ document.getElementById("newCount").textContent=n;
+ document.getElementById("workCount").textContent=w;
+ document.getElementById("doneCount").textContent=d;
+ if(!rows.length){box.innerHTML='<div class="empty">Заявок пока нет.</div>';return}
+
+ box.innerHTML=rows.map(x=>{
+   const [label,cls]=statusLabel(x.status),current=x.status||"new";
+   return `<article class="request">
+   <div class="requestHead">
+    <div><div class="requestTitle">${esc(x.name||"Без имени")}</div><div class="muted">Заявка №${esc(x.id)} · ${formatDate(x.created_at)}</div></div>
+    <span class="badge ${cls}">${label}</span>
+   </div>
+
+   <div class="meta">
+    <div><b>ФИО</b>${esc(x.name||"—")}</div>
+    <div><b>Госномер</b>${esc(x.plate||"—")}</div>
+    <div><b>Автомобиль</b>${esc(x.car||"—")}</div>
+    <div><b>Год</b>${esc(x.year||"—")}</div>
+    <div><b>Связь</b>${esc(x.contact_type||"—")}</div>
+    <div><b>Контакт</b>${esc(x.contact||"—")}</div>
+   </div>
+
+   ${x.message?`<div class="message"><b>Что нужно:</b><br>${esc(x.message)}</div>`:""}
+
+   <div class="adminFields">
+    <h3>Данные по визиту</h3>
+    <div class="adminGrid">
+      <label>ФИО<input id="name-${x.id}" value="${esc(x.name||"")}" placeholder="ФИО клиента"></label>
+      <label>Госномер<input id="plate-${x.id}" value="${esc(x.plate||"")}" placeholder="А123ВС777"></label>
+      <label>Дата визита<input id="visit-${x.id}" type="date" value="${dateOnly(x.visit_date)}"></label>
+      <label>Дата выполнения<input id="complete-${x.id}" type="date" value="${dateOnly(x.completed_date)}"></label>
+    </div>
+    <div class="saveRow">
+      <button class="greenBtn" onclick="saveAdminData(${Number(x.id)},this)">Сохранить данные</button>
+      <span id="save-msg-${x.id}" class="muted"></span>
+    </div>
+   </div>
+
+   <div class="actions">
+    <button class="statusBtn ${current==="new"?"active":""}" onclick="setStatus(${Number(x.id)},'new',this)">Новая</button>
+    <button class="statusBtn ${current==="work"?"active":""}" onclick="setStatus(${Number(x.id)},'work',this)">В работу</button>
+    <button class="statusBtn ${current==="done"?"active":""}" onclick="setStatus(${Number(x.id)},'done',this)">Завершить</button>
+   </div>
+   </article>`;
+ }).join("");
+}
+
+async function saveAdminData(id,button){
+ const msg=document.getElementById("save-msg-"+id);
+ button.disabled=true;msg.textContent="Сохраняем…";
+ const payload={
+   name:document.getElementById("name-"+id).value.trim(),
+   plate:document.getElementById("plate-"+id).value.trim().toUpperCase(),
+   visit_date:document.getElementById("visit-"+id).value||null,
+   completed_date:document.getElementById("complete-"+id).value||null
+ };
+ const r=await sb.from("requests").update(payload).eq("id",id);
+ button.disabled=false;
+ if(r.error){msg.textContent="Ошибка: "+r.error.message;return}
+ msg.textContent="Сохранено ✓";
+ setTimeout(()=>{if(msg)msg.textContent=""},2500);
+ await loadRequests();
+}
+
+async function setStatus(id,status,button){
+ const buttons=button.parentElement.querySelectorAll("button");buttons.forEach(b=>b.disabled=true);
+ const r=await sb.from("requests").update({status}).eq("id",id);
+ if(r.error){alert("Не удалось изменить статус: "+r.error.message);buttons.forEach(b=>b.disabled=false);return}
+ await loadRequests();
+}
+
+async function loadWorks(){
+ const box=document.getElementById("worksList");box.innerHTML='<div class="empty">Загрузка…</div>';
+ const r=await sb.from("works").select("*").order("created_at",{ascending:false});
+ if(r.error){box.innerHTML='<div class="notice">Не удалось загрузить работы: '+esc(r.error.message)+'</div>';return}
+ const rows=r.data||[];
+ box.innerHTML=rows.length?rows.map(x=>`<div class="work"><img src="${esc(x.image_url)}" alt=""><div><b>${esc(x.title)}</b><div class="muted">${esc(x.description||"")}</div></div><button class="danger" onclick="delWork(${Number(x.id)})">Удалить</button></div>`).join(""):'<div class="empty">Работ пока нет.</div>';
+}
+async function delWork(id){if(!confirm("Удалить эту работу?"))return;const r=await sb.from("works").delete().eq("id",id);if(r.error)alert(r.error.message);else loadWorks()}
+
+document.getElementById("loginBtn").onclick=async()=>{
+ const msg=document.getElementById("loginMsg");msg.textContent="Выполняется вход…";
+ const r=await sb.auth.signInWithPassword({email:document.getElementById("email").value.trim(),password:document.getElementById("password").value});
+ if(r.error){msg.textContent=r.error.message;return}
+ document.getElementById("login").classList.add("hidden");document.getElementById("panel").classList.remove("hidden");msg.textContent="";loadRequests();loadWorks();
+};
+document.getElementById("logoutBtn").onclick=async()=>{await sb.auth.signOut();location.reload()};
+document.getElementById("refreshRequests").onclick=loadRequests;
+document.getElementById("refreshWorks").onclick=loadWorks;
+document.getElementById("tabRequests").onclick=()=>{tabRequests.classList.add("active");tabWorks.classList.remove("active");requestsSection.classList.remove("hidden");worksSection.classList.add("hidden")};
+document.getElementById("tabWorks").onclick=()=>{tabWorks.classList.add("active");tabRequests.classList.remove("active");worksSection.classList.remove("hidden");requestsSection.classList.add("hidden")};
+
+document.getElementById("uploadBtn").onclick=async()=>{
+ const f=image.files[0],t=title.value.trim(),d=description.value.trim();
+ if(!f||!t){uploadMsg.textContent="Выбери фото и укажи название.";return}
+ uploadMsg.textContent="Загрузка…";
+ const path=crypto.randomUUID()+"."+((f.name.split(".").pop()||"jpg").toLowerCase());
+ let r=await sb.storage.from(BUCKET).upload(path,f,{contentType:f.type});
+ if(r.error){uploadMsg.textContent=r.error.message;return}
+ const url=sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+ r=await sb.from("works").insert({title:t,description:d,image_url:url});
+ if(r.error){await sb.storage.from(BUCKET).remove([path]);uploadMsg.textContent=r.error.message;return}
+ title.value="";description.value="";image.value="";uploadMsg.textContent="Готово!";loadWorks();
+};
+
+(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){login.classList.add("hidden");panel.classList.remove("hidden");loadRequests();loadWorks()}})();
+</script>
+</body>
+</html>

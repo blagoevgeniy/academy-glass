@@ -271,6 +271,8 @@ async function loadWorks(){
 }
 
 const workModal=document.getElementById("workModal");
+const workModalInner=document.querySelector(".workModalInner");
+const workModalImgWrap=document.querySelector(".workModalImgWrap");
 const workModalImg=document.getElementById("workModalImg");
 const workModalTitle=document.getElementById("workModalTitle");
 const workModalDescription=document.getElementById("workModalDescription");
@@ -338,7 +340,9 @@ workModalPrev?.addEventListener("click",showPrev);
 workModalNext?.addEventListener("click",showNext);
 
 workModal?.addEventListener("click",e=>{
-  if(e.target===workModal)closeWorkModal();
+  // Закрываем просмотрщик по клику на любое пустое место:
+  // фон модального окна, внутренний контейнер и пустое место вокруг фотографии.
+  if(e.target===workModal || e.target===workModalInner || e.target===workModalImgWrap)closeWorkModal();
 });
 
 document.addEventListener("keydown",e=>{
